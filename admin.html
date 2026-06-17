@@ -247,6 +247,12 @@
       transition: all 0.2s;
     }
     .btn-save:hover { transform: scale(1.03); filter: brightness(1.1); }
+    .btn-save:disabled {
+      opacity: 0.55;
+      cursor: wait;
+      transform: none;
+      filter: none;
+    }
     .btn-cancel {
       padding: 14px 28px;
       background: transparent;
@@ -320,6 +326,13 @@
       background: rgba(255,255,255,0.1);
       border-color: var(--muted);
       color: var(--text);
+    }
+    .upload-status {
+      min-height: 18px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
     }
 
     @media (max-width: 768px) {
@@ -453,6 +466,7 @@
             </div>
           </div>
           <input type="hidden" id="image_path" placeholder="hero.png">
+          <div id="uploadStatus" class="upload-status" aria-live="polite"></div>
         </div>
         <div class="form-group">
           <label>Lien de commande (Chariow)</label>
@@ -478,7 +492,7 @@
         </div>
         <div class="form-actions">
           <button type="button" class="btn-cancel" onclick="closeModal()">Annuler</button>
-          <button type="submit" class="btn-save">Enregistrer</button>
+          <button type="submit" class="btn-save" id="saveButton">Enregistrer</button>
         </div>
       </form>
     </div>
@@ -486,6 +500,22 @@
 
   <script>
     let currentTab = 'leads';
+    let imageUploadInProgress = false;
+
+    function setImageUploadState(isUploading, message) {
+      imageUploadInProgress = isUploading;
+      const saveButton = document.getElementById('saveButton');
+      const uploadStatus = document.getElementById('uploadStatus');
+
+      if (saveButton) {
+        saveButton.disabled = isUploading;
+        saveButton.innerText = isUploading ? 'Upload...' : 'Enregistrer';
+      }
+
+      if (uploadStatus && message !== undefined) {
+        uploadStatus.textContent = message;
+      }
+    }
 
     function switchTab(tab) {
       currentTab = tab;
@@ -529,7 +559,7 @@
       const table = document.getElementById("accountsTable");
       const empty = document.getElementById("accountsEmpty");
       try {
-        const response = await fetch("/api/admin/accounts");
+        const response = await fetch("/api/admin/accounts", { credentials: 'same-origin' });
         const data = await response.json();
         if (!data.ok || data.accounts.length === 0) {
           table.innerHTML = "";
@@ -559,6 +589,7 @@
       const modal = document.getElementById('accountModal');
       const form = document.getElementById('accountForm');
       document.getElementById('modalTitle').innerText = acc ? 'Modifier le compte' : 'Ajouter un compte';
+      setImageUploadState(false, '');
 
       if (acc) {
         document.getElementById('accId').value = acc.id;
@@ -600,21 +631,33 @@
       const preview = document.getElementById('imagePreview');
       preview.src = URL.createObjectURL(file);
       preview.style.display = 'block';
+      document.getElementById('image_path').value = '';
+      setImageUploadState(true, "Upload de l'image en cours...");
 
       try {
         const response = await fetch('/api/admin/upload', {
           method: 'POST',
-          body: formData
+          body: formData,
+          credentials: 'same-origin'
         });
-        const data = await response.json();
+        const data = await response.json().catch(() => ({
+          ok: false,
+          error: "Reponse invalide du serveur."
+        }));
 
-        if (data.ok) {
-          document.getElementById('image_path').value = data.path;
-        } else {
-          alert("Erreur lors de l'upload de l'image.");
+        if (!response.ok || !data.ok) {
+          throw new Error(data.error || "Erreur lors de l'upload de l'image.");
         }
+
+        document.getElementById('image_path').value = data.path;
+        preview.src = data.path;
+        setImageUploadState(false, "Image uploadee.");
       } catch (e) {
-        alert("Erreur de connexion au serveur.");
+        document.getElementById('image_path').value = '';
+        preview.src = '';
+        preview.style.display = 'none';
+        setImageUploadState(false, e.message || "Erreur de connexion au serveur.");
+        alert(e.message || "Erreur de connexion au serveur.");
       }
     }
 
@@ -623,7 +666,7 @@
     }
 
     async function editAccount(id) {
-      const response = await fetch("/api/admin/accounts");
+      const response = await fetch("/api/admin/accounts", { credentials: 'same-origin' });
       const data = await response.json();
       const acc = data.accounts.find(a => a.id === id);
       openModal(acc);
@@ -631,12 +674,23 @@
 
     async function deleteAccount(id) {
       if (!confirm("Supprimer ce compte définitivement ?")) return;
-      const res = await fetch(`/api/admin/accounts/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/accounts/${id}`, { method: 'DELETE', credentials: 'same-origin' });
       if (res.ok) loadAccounts();
     }
 
     document.getElementById('accountForm').onsubmit = async (e) => {
       e.preventDefault();
+      if (imageUploadInProgress) {
+        alert("Patientez jusqu'a la fin de l'upload de l'image.");
+        return;
+      }
+
+      const selectedImageFile = document.getElementById('imageFile').files[0];
+      if (selectedImageFile && !document.getElementById('image_path').value) {
+        alert("L'image n'a pas ete envoyee. Choisissez-la a nouveau ou patientez avant d'enregistrer.");
+        return;
+      }
+
       const id = document.getElementById('accId').value;
       const body = {
         platform: document.getElementById('platform').value,
@@ -658,7 +712,8 @@
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
+        credentials: 'same-origin'
       });
 
       if (res.ok) {

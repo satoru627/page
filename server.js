@@ -8,7 +8,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // --- STORAGE CONFIGURATION ---
-// On Railway, mount your volume to /app/storage
+// On Railway, point STORAGE_PATH to a mounted volume if you want uploads to survive redeploys.
 const STORAGE_ROOT = process.env.STORAGE_PATH || path.join(__dirname, "storage");
 const dbDir = path.join(STORAGE_ROOT, "data");
 const dbPath = path.join(dbDir, "monetize-hub.sqlite");
@@ -16,6 +16,7 @@ const uploadDir = path.join(STORAGE_ROOT, "uploads");
 // -----------------------------
 
 const rootDir = __dirname;
+const legacyUploadDir = path.join(rootDir, "uploads");
 
 // --- CONFIGURATION ---
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin123!"; // Set this in Railway Variables!
@@ -46,7 +47,16 @@ const storage = multer.diskStorage({
     cb(null, uniqueSuffix + path.extname(file.originalname));
   }
 });
-const upload = multer({ storage: storage });
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (!file.mimetype || !file.mimetype.startsWith("image/")) {
+      return cb(new Error("Only image uploads are allowed."));
+    }
+    cb(null, true);
+  }
+});
 
 // Basic Auth Middleware
 function basicAuth(req, res, next) {
@@ -138,7 +148,14 @@ const insertSub = db.prepare(`
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Serve uploads from the storage root
 app.use("/uploads", express.static(uploadDir));
+// Keep old committed uploads working if a database row still references them.
+app.use("/uploads", express.static(legacyUploadDir));
+
+// Serve static files from root for default images
+app.use(express.static(rootDir));
 
 function sendHtml(res, fileName) {
   res.sendFile(path.join(rootDir, fileName));
@@ -305,13 +322,20 @@ app.delete("/api/admin/accounts/:id", basicAuth, (req, res) => {
   }
 });
 
-app.post("/api/admin/upload", basicAuth, upload.single('file'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ ok: false, error: "No file uploaded." });
-  }
-  res.json({
-    ok: true,
-    path: `/uploads/${req.file.filename}`
+app.post("/api/admin/upload", basicAuth, (req, res) => {
+  upload.single("file")(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ ok: false, error: err.message });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ ok: false, error: "No file uploaded." });
+    }
+
+    res.json({
+      ok: true,
+      path: `/uploads/${req.file.filename}`
+    });
   });
 });
 
