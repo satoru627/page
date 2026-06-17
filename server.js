@@ -6,13 +6,19 @@ const multer = require("multer");
 
 const app = express();
 const port = process.env.PORT || 3000;
-const rootDir = __dirname;
-const dbDir = path.join(rootDir, "data");
+
+// --- STORAGE CONFIGURATION ---
+// On Railway, mount your volume to /app/storage
+const STORAGE_ROOT = process.env.STORAGE_PATH || path.join(__dirname, "storage");
+const dbDir = path.join(STORAGE_ROOT, "data");
 const dbPath = path.join(dbDir, "monetize-hub.sqlite");
-const uploadDir = path.join(rootDir, "uploads");
+const uploadDir = path.join(STORAGE_ROOT, "uploads");
+// -----------------------------
+
+const rootDir = __dirname;
 
 // --- CONFIGURATION ---
-const ADMIN_PASSWORD = "Admin123!"; // CHANGE THIS PASSWORD!
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin123!"; // Set this in Railway Variables!
 // ---------------------
 
 fs.mkdirSync(dbDir, { recursive: true });
