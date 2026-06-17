@@ -459,6 +459,13 @@
           <input type="url" id="purchase_link" placeholder="https://chariow.com/produit/...">
         </div>
         <div class="form-group">
+          <label>Statut de monétisation</label>
+          <select id="monetized">
+            <option value="1">Monétisé (Badge Vert)</option>
+            <option value="0">Non Monétisé (Badge Rouge)</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label>Date d'expiration</label>
           <input type="date" id="expires_at">
         </div>
@@ -535,7 +542,10 @@
             <td><span class="badge badge-platform">${acc.platform}</span></td>
             <td><strong>${acc.name}</strong></td>
             <td>${acc.price}</td>
-            <td><span class="badge" style="background:${acc.is_available ? 'var(--green)' : 'var(--red)'}">${acc.is_available ? 'Actif' : 'Inactif'}</span></td>
+            <td>
+              <span class="badge" style="background:${acc.is_available ? 'var(--green)' : 'var(--red)'}">${acc.is_available ? 'Actif' : 'Inactif'}</span>
+              <span class="badge" style="background:${acc.monetized ? 'var(--green)' : 'var(--red)'}">${acc.monetized ? 'M' : 'NM'}</span>
+            </td>
             <td>
               <button class="btn-action edit" onclick="editAccount(${acc.id})">Modifier</button>
               <button class="btn-action delete" onclick="deleteAccount(${acc.id})">Supprimer</button>
@@ -562,6 +572,7 @@
         document.getElementById('expires_at').value = acc.expires_at;
         document.getElementById('is_available').value = acc.is_available;
         document.getElementById('purchase_link').value = acc.purchase_link || '';
+        document.getElementById('monetized').value = acc.monetized !== undefined ? acc.monetized : 1;
 
         // Set initial preview
         const preview = document.getElementById('imagePreview');
@@ -570,6 +581,7 @@
       } else {
         form.reset();
         document.getElementById('accId').value = '';
+        document.getElementById('monetized').value = '1';
         const preview = document.getElementById('imagePreview');
         preview.src = '';
         preview.style.display = 'none';
@@ -636,7 +648,8 @@
         image_path: document.getElementById('image_path').value,
         expires_at: document.getElementById('expires_at').value,
         is_available: parseInt(document.getElementById('is_available').value),
-        purchase_link: document.getElementById('purchase_link').value
+        purchase_link: document.getElementById('purchase_link').value,
+        monetized: parseInt(document.getElementById('monetized').value)
       };
 
       const method = id ? 'PUT' : 'POST';

@@ -28,7 +28,7 @@
       min-width: 320px;
       background:
         radial-gradient(circle at 12% 0%, rgba(239, 68, 68, 0.22), transparent 28rem),
-        radial-gradient(circle at 88% 4%, rgba(124, 58, 237, 0.30), transparent 30rem),
+        radial-gradient(circle at 88% 4%, rgba(185, 28, 28, 0.28), transparent 30rem),
         linear-gradient(180deg, #050712 0%, #090d1d 55%, #050712 100%);
       color: var(--text);
       font-family: var(--font);
@@ -111,12 +111,21 @@
       position: absolute;
       left: 14px;
       bottom: 14px;
-      padding: 7px 10px;
+      padding: 6px 12px;
       border-radius: 999px;
-      color: #bbf7d0;
-      background: rgba(5, 7, 18, 0.76);
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       font-weight: 900;
+      backdrop-filter: blur(8px);
+    }
+    .badge-green { 
+      background: rgba(34, 197, 94, 0.85); 
+      color: #fff; 
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+    }
+    .badge-red { 
+      background: rgba(239, 68, 68, 0.85); 
+      color: #fff; 
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
     }
     .account-body { padding: 24px; }
     .account-top {
@@ -181,7 +190,7 @@
       border-radius: 24px;
       padding: 28px;
       background:
-        radial-gradient(circle at 16% 0%, rgba(124, 58, 237, 0.28), transparent 18rem),
+        radial-gradient(circle at 16% 0%, rgba(239, 68, 68, 0.28), transparent 18rem),
         rgba(9, 13, 29, 0.94);
       box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
       transform: translateY(18px) scale(0.98);
@@ -237,8 +246,8 @@
       outline: none;
     }
     .login-popup-form input:focus {
-      border-color: rgba(124, 58, 237, 0.7);
-      box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.16);
+      border-color: rgba(239, 68, 68, 0.7);
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.16);
     }
     .login-popup-form button {
       min-height: 54px;
@@ -327,7 +336,7 @@
           <article class="account-card">
             <div class="account-image">
               <img src="${acc.image_path}" alt="Aperçu ${acc.name}">
-              <span class="badge">${acc.badge}</span>
+              <span class="badge ${acc.monetized ? 'badge-green' : 'badge-red'}">${acc.monetized ? 'Monétisé' : 'Non monétisé'}</span>
             </div>
             <div class="account-body">
               <div class="account-top">

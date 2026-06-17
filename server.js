@@ -20,12 +20,15 @@ fs.mkdirSync(uploadDir, { recursive: true });
 
 const db = new DatabaseSync(dbPath);
 
-// Ensure purchase_link column exists (migration)
+// Ensure purchase_link and monetized columns exist (migration)
 try {
   db.exec(`ALTER TABLE accounts ADD COLUMN purchase_link TEXT`);
-} catch (e) {
-  // Ignore if column already exists
-}
+} catch (e) {}
+try {
+  db.exec(`ALTER TABLE accounts ADD COLUMN monetized INTEGER DEFAULT 1`);
+  // Ensure existing rows get the default value if they were already there
+  db.exec(`UPDATE accounts SET monetized = 1 WHERE monetized IS NULL`);
+} catch (e) {}
 
 // Multer configuration for image uploads
 const storage = multer.diskStorage({
@@ -87,22 +90,23 @@ db.exec(`
     image_path TEXT,
     expires_at TEXT,
     is_available BOOLEAN DEFAULT 1,
-    purchase_link TEXT
+    purchase_link TEXT,
+    monetized INTEGER DEFAULT 1
   );
 `);
 
 // Seed data if empty
 const accountCount = db.prepare(`SELECT count(*) as count FROM accounts`).get().count;
 if (accountCount === 0) {
-  const insertAcc = db.prepare(`INSERT INTO accounts (platform, name, price, description, meta_items, badge, image_path, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
+  const insertAcc = db.prepare(`INSERT INTO accounts (platform, name, price, description, meta_items, badge, image_path, expires_at, monetized) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`);
 
   const accounts = [
-    ['tiktok', 'TikTok Starter', '50K FCFA', 'Compte pret pour lancement rapide et tests de contenu.', JSON.stringify(['10K+ abonnes', 'Monetise', 'Niche generaliste', 'Livraison 24h']), 'Disponible', 'hero.png', '2026-07-01'],
-    ['tiktok', 'TikTok Creator', '75K FCFA', 'Profil adapte aux createurs qui publient souvent.', JSON.stringify(['25K+ abonnes', 'Monetise', 'Bon engagement', 'Support inclus']), 'Disponible', 'hero.png', '2026-07-05'],
-    ['tiktok', 'TikTok Premium', '120K FCFA', 'Compte plus solide pour scaling et tests intensifs.', JSON.stringify(['50K+ abonnes', 'Monetise', 'Niche business', 'Transfert guide']), 'Stock limite', 'hero.png', '2026-06-20'],
-    ['youtube', 'YouTube Starter', '80K FCFA', 'Chaine monetisee pour lancer rapidement une strategie video.', JSON.stringify(['1K+ abonnes', 'AdSense pret', 'Niche generaliste', 'Livraison 24h']), 'Disponible', 'designarena_image_ajbe96ys.png', '2026-07-01'],
-    ['youtube', 'YouTube Growth', '150K FCFA', 'Chaine avec meilleure base pour contenus longs et Shorts.', JSON.stringify(['5K+ abonnes', 'Monetisee', 'Audience active', 'Support inclus']), 'Disponible', 'designarena_image_ajbe96ys.png', '2026-07-08'],
-    ['youtube', 'YouTube Premium', '250K FCFA', 'Chaine plus avancee pour creer un actif media durable.', JSON.stringify(['10K+ abonnes', 'AdSense actif', 'Niche business', 'Transfert guide']), 'Stock limite', 'designarena_image_ajbe96ys.png', '2026-06-22'],
+    ['tiktok', 'TikTok Starter', '50K FCFA', 'Compte pret pour lancement rapide et tests de contenu.', JSON.stringify(['10K+ abonnes', 'Monetise', 'Niche generaliste', 'Livraison 24h']), 'Disponible', 'hero.png', '2026-07-01', 1],
+    ['tiktok', 'TikTok Creator', '75K FCFA', 'Profil adapte aux createurs qui publient souvent.', JSON.stringify(['25K+ abonnes', 'Monetise', 'Bon engagement', 'Support inclus']), 'Disponible', 'hero.png', '2026-07-05', 1],
+    ['tiktok', 'TikTok Premium', '120K FCFA', 'Compte plus solide pour scaling et tests intensifs.', JSON.stringify(['50K+ abonnes', 'Monetise', 'Niche business', 'Transfert guide']), 'Stock limite', 'hero.png', '2026-06-20', 1],
+    ['youtube', 'YouTube Starter', '80K FCFA', 'Chaine monetisee pour lancer rapidement une strategie video.', JSON.stringify(['1K+ abonnes', 'AdSense pret', 'Niche generaliste', 'Livraison 24h']), 'Disponible', 'designarena_image_ajbe96ys.png', '2026-07-01', 1],
+    ['youtube', 'YouTube Growth', '150K FCFA', 'Chaine avec meilleure base pour contenus longs et Shorts.', JSON.stringify(['5K+ abonnes', 'Monetisee', 'Audience active', 'Support inclus']), 'Disponible', 'designarena_image_ajbe96ys.png', '2026-07-08', 1],
+    ['youtube', 'YouTube Premium', '250K FCFA', 'Chaine plus avancee pour creer un actif media durable.', JSON.stringify(['10K+ abonnes', 'AdSense actif', 'Niche business', 'Transfert guide']), 'Stock limite', 'designarena_image_ajbe96ys.png', '2026-06-22', 1],
   ];
 
   accounts.forEach(acc => insertAcc.run(...acc));
@@ -214,15 +218,15 @@ app.get("/api/admin/accounts", basicAuth, (_req, res) => {
 
 app.post("/api/admin/accounts", basicAuth, (req, res) => {
   try {
-    const { platform, name, price, description, meta_items, badge, image_path, expires_at, purchase_link } = req.body;
+    const { platform, name, price, description, meta_items, badge, image_path, expires_at, purchase_link, monetized } = req.body;
 
     if (!platform || !name || !price) {
       return res.status(400).json({ ok: false, error: "Platform, name and price are required." });
     }
 
     const stmt = db.prepare(`
-      INSERT INTO accounts (platform, name, price, description, meta_items, badge, image_path, expires_at, purchase_link)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO accounts (platform, name, price, description, meta_items, badge, image_path, expires_at, purchase_link, monetized)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const result = stmt.run(
@@ -234,7 +238,8 @@ app.post("/api/admin/accounts", basicAuth, (req, res) => {
       badge || "Disponible",
       image_path || "hero.png",
       expires_at || new Date().toISOString().split('T')[0],
-      purchase_link || ""
+      purchase_link || "",
+      monetized !== undefined ? monetized : 1
     );
 
     res.status(201).json({ ok: true, id: result.lastInsertRowid });
@@ -246,11 +251,11 @@ app.post("/api/admin/accounts", basicAuth, (req, res) => {
 app.put("/api/admin/accounts/:id", basicAuth, (req, res) => {
   try {
     const id = req.params.id;
-    const { platform, name, price, description, meta_items, badge, image_path, expires_at, is_available, purchase_link } = req.body;
+    const { platform, name, price, description, meta_items, badge, image_path, expires_at, is_available, purchase_link, monetized } = req.body;
 
     const stmt = db.prepare(`
       UPDATE accounts
-      SET platform = ?, name = ?, price = ?, description = ?, meta_items = ?, badge = ?, image_path = ?, expires_at = ?, is_available = ?, purchase_link = ?
+      SET platform = ?, name = ?, price = ?, description = ?, meta_items = ?, badge = ?, image_path = ?, expires_at = ?, is_available = ?, purchase_link = ?, monetized = ?
       WHERE id = ?
     `);
 
@@ -265,6 +270,7 @@ app.put("/api/admin/accounts/:id", basicAuth, (req, res) => {
       expires_at,
       is_available !== undefined ? is_available : 1,
       purchase_link || "",
+      monetized !== undefined ? monetized : 1,
       id
     );
 
