@@ -10,26 +10,26 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #050712;
-      --panel: rgba(255, 255, 255, 0.065);
-      --border: rgba(255, 255, 255, 0.12);
-      --text: #f8fafc;
-      --muted: #9aa7bd;
-      --soft: #cbd5e1;
-      --red: #ef4444;
+      --bg: #ffffff;
+      --panel: #ffffff;
+      --border: rgba(0, 0, 0, 0.08);
+      --text: #0a0a0a;
+      --muted: #6b7280;
+      --soft: #374151;
+      --red: #dc2626;
       --primary-dark: #b91c1c;
-      --green: #22c55e;
-      --gold: #facc15;
-      --shadow: 0 28px 80px rgba(0, 0, 0, 0.38);
+      --green: #16a34a;
+      --gold: #ca8a04;
+      --shadow: 0 28px 80px rgba(0, 0, 0, 0.08);
       --font: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       min-width: 320px;
       background:
-        radial-gradient(circle at 12% 0%, rgba(239, 68, 68, 0.22), transparent 28rem),
-        radial-gradient(circle at 88% 4%, rgba(185, 28, 28, 0.28), transparent 30rem),
-        linear-gradient(180deg, #050712 0%, #090d1d 55%, #050712 100%);
+        radial-gradient(circle at 12% 0%, rgba(220, 38, 38, 0.06), transparent 28rem),
+        radial-gradient(circle at 88% 4%, rgba(185, 28, 28, 0.05), transparent 30rem),
+        linear-gradient(180deg, #ffffff 0%, #f8f9fa 55%, #ffffff 100%);
       color: var(--text);
       font-family: var(--font);
       line-height: 1.6;
@@ -41,9 +41,9 @@
       top: 0;
       z-index: 20;
       padding: 18px 0;
-      background: rgba(5, 7, 18, 0.76);
+      background: rgba(255, 255, 255, 0.82);
       backdrop-filter: blur(18px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
     }
     .nav-inner {
       display: flex;
@@ -58,10 +58,10 @@
       display: inline-flex;
       margin-bottom: 16px;
       padding: 8px 13px;
-      border: 1px solid rgba(239, 68, 68, 0.30);
+      border: 1px solid rgba(220, 38, 38, 0.25);
       border-radius: 999px;
-      color: #fecaca;
-      background: rgba(239, 68, 68, 0.10);
+      color: #b91c1c;
+      background: #fef2f2;
       font-size: 0.78rem;
       font-weight: 900;
       letter-spacing: 0.1em;
@@ -90,14 +90,14 @@
       border: 1px solid var(--border);
       border-radius: 22px;
       background: var(--panel);
-      box-shadow: var(--shadow);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
       backdrop-filter: blur(20px);
     }
     .account-image {
       position: relative;
       aspect-ratio: 16 / 10;
       overflow: hidden;
-      background: rgba(255, 255, 255, 0.06);
+      background: #f1f3f5;
     }
     .account-image img {
       width: 100%;
@@ -118,14 +118,14 @@
       backdrop-filter: blur(8px);
     }
     .badge-green { 
-      background: rgba(34, 197, 94, 0.85); 
+      background: rgba(22, 163, 74, 0.9); 
       color: #fff; 
-      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
     }
     .badge-red { 
-      background: rgba(239, 68, 68, 0.85); 
+      background: rgba(220, 38, 38, 0.9); 
       color: #fff; 
-      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
     }
     .account-body { padding: 24px; }
     .account-top {
@@ -143,15 +143,15 @@
       margin: 18px 0;
     }
     .meta span, .countdown {
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(0, 0, 0, 0.07);
       border-radius: 14px;
       padding: 10px;
       color: var(--soft);
-      background: rgba(255, 255, 255, 0.055);
+      background: #f8f9fa;
       font-size: 0.86rem;
       font-weight: 800;
     }
-    .countdown { margin-bottom: 18px; color: #fde68a; }
+    .countdown { margin-bottom: 18px; color: #b45309; }
     .btn {
       display: inline-flex;
       width: 100%;
@@ -172,7 +172,7 @@
       display: grid;
       place-items: center;
       padding: 20px;
-      background: rgba(3, 5, 16, 0.68);
+      background: rgba(0, 0, 0, 0.4);
       backdrop-filter: blur(14px);
       opacity: 0;
       visibility: hidden;
@@ -186,13 +186,13 @@
     }
     .login-popup-card {
       width: min(100%, 420px);
-      border: 1px solid rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(0, 0, 0, 0.10);
       border-radius: 24px;
       padding: 28px;
       background:
-        radial-gradient(circle at 16% 0%, rgba(239, 68, 68, 0.28), transparent 18rem),
-        rgba(9, 13, 29, 0.94);
-      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+        radial-gradient(circle at 16% 0%, rgba(220, 38, 38, 0.06), transparent 18rem),
+        #ffffff;
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.14);
       transform: translateY(18px) scale(0.98);
       transition: transform 260ms ease;
     }
@@ -218,10 +218,10 @@
       width: 38px;
       height: 38px;
       flex: 0 0 auto;
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(0, 0, 0, 0.10);
       border-radius: 50%;
-      color: #fff;
-      background: rgba(255, 255, 255, 0.08);
+      color: #374151;
+      background: rgba(0, 0, 0, 0.05);
       cursor: pointer;
     }
     .login-popup-form {
@@ -241,27 +241,27 @@
       border: 1px solid var(--border);
       border-radius: 16px;
       padding: 0 16px;
-      color: #fff;
-      background: rgba(255, 255, 255, 0.07);
+      color: #0a0a0a;
+      background: #ffffff;
       outline: none;
     }
     .login-popup-form input:focus {
-      border-color: rgba(239, 68, 68, 0.7);
-      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.16);
+      border-color: rgba(220, 38, 38, 0.7);
+      box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12);
     }
     .login-popup-form button {
       min-height: 54px;
       margin-top: 6px;
       border: 0;
       border-radius: 16px;
-      color: #171100;
-      background: var(--gold);
+      color: #fff;
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
       font-weight: 900;
       cursor: pointer;
     }
     .login-popup-status {
       min-height: 20px;
-      color: #bbf7d0;
+      color: #16a34a;
       font-size: 0.85rem;
       font-weight: 700;
     }
